@@ -1,0 +1,44 @@
+{
+  "description"     : "========  CWASA installation configuration data  ========",
+
+  "jasBase"         : "http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/",
+  "jasVersionTag"   : "vhg2021",
+
+  "sigmlBase"       : "sigml",
+  "avJARBase"       : "avatars",
+  "avJSONBase"      : "avjson",
+  "useAvatarJARs"   : true,
+
+  "animgenFPS"      : 50,
+  "animgenServer"   : "http://vhg.cmp.uea.ac.uk/cgi-bin/animgen/animgenserver.pl",
+
+  "avs" : [
+    "anna", "marc", "francoise"
+  ],
+
+  "avsfull" : [
+    "anna", "marc", "francoise",
+    "luna", "siggi",
+    "robotboy", "beatrice", "genie",
+    "otis", "darshan", "candy",
+    "max", "monkey"
+  ],
+
+  "avsbsl" : [
+    "luna", "siggi", "anna", "marc", "francoise"
+  ],
+
+  "avSettings" : [
+    {
+      "description":      "Default settings",
+      "width":            512,
+      "height":           400,
+      "avList":           "avsbsl",
+      "initAv":           "marc",
+      "initCamera":       [ 0, 0.23, 3.24, 5, 18, 30, -1, -1 ],
+      "allowFrameSteps":  true,
+      "initSiGMLURL":     "",
+      "allowSiGMLText":   true
+    }
+  ]
+}

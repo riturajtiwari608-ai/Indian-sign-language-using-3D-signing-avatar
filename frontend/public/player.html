@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ISL SiGML Avatar Player</title>
+<link rel="stylesheet" href="/cwa-js/cwasa.css" />
+<script type="text/javascript" src="/cwa-js/allcsa.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #111827;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #e5e7eb;
+  }
+  #wrap {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+  }
+  .avatar-area {
+    flex: 1; position: relative; min-height: 0;
+    display: flex; align-items: stretch; justify-content: center;
+  }
+  .avatar-area table { width: 100%; height: 100%; }
+  .CWASAAvatar { width: 100% !important; height: 100% !important; }
+  .CWASAAvatar canvas {
+    width: 100% !important; height: 100% !important;
+    border-radius: 4px;
+  }
+
+  .info-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; padding: 10px 16px;
+    background: #1f2937; border-top: 1px solid #374151;
+    flex-shrink: 0; min-height: 48px;
+  }
+  .sign-label {
+    font-size: 22px; font-weight: 700; letter-spacing: 3px;
+    color: #60a5fa; min-width: 100px; text-align: center;
+    text-transform: uppercase;
+  }
+  .sign-desc {
+    font-size: 13px; color: #9ca3af;
+  }
+  .av-controls {
+    display: flex; align-items: center; gap: 6px;
+    margin-left: auto;
+  }
+  .av-controls select {
+    font-size: 12px; padding: 4px 8px; border-radius: 4px;
+    border: 1px solid #374151; background: #1f2937; color: #e5e7eb;
+    cursor: pointer; outline: none;
+  }
+  .av-controls select:hover { border-color: #60a5fa; }
+
+  #idle-msg {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255,255,255,0.25); font-size: 15px;
+    pointer-events: none; text-align: center; z-index: 10;
+    line-height: 1.6;
+  }
+
+  #loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(17,24,39,0.9);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20;
+  }
+  .loader {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(96,165,250,0.2);
+    border-top-color: #60a5fa;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { margin-top: 14px; font-size: 14px; color: #9ca3af; }
+
+  .txtSiGMLURL, .txtSF, .txtGloss, .statusExtra,
+  .bttnPlaySiGMLURL, .bttnStop, .CWASASpeed, .spanInfo,
+  .CWASAAvMenu { display: none !important; }
+</style>
+<script>
+  var initCfg = {
+    "avsbsl": ["luna", "siggi", "anna", "marc", "francoise"],
+    "avSettings": { "avList": "avsbsl", "initAv": "marc" }
+  };
+  // These globals are READ and WRITTEN by the CWA library (allcsa.js):
+  //   tuavatarLoaded  -> set to true when avatar texture loads
+  //   playerAvailableToPlay -> set to true when a sign animation completes
+  var playerAvailableToPlay = true;
+  var tuavatarLoaded = false;
+</script>
+</head>
+<body onload="CWASA.init(initCfg);">
+
+<div id="wrap">
+  <div class="avatar-area">
+    <div id="loading-overlay">
+      <div class="loader"></div>
+      <div class="loader-text">Loading 3D signing avatar...</div>
+    </div>
+    <div id="idle-msg">
+      Enter a sentence above and click<br/>"Translate to ISL" to see the animation
+    </div>
+
+    <table>
+      <tr>
+        <td width="100%" height="95%">
+          <div class="CWASAAvatar av0"></div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="CWASAAvMenu av0"></span>
+          <input type="button" value="Sign" class="bttnPlaySiGMLURL av0" />
+          <input type="button" value="Stop" class="bttnStop av0" />
+          <span class="CWASASpeed av0"></span>
+          <input class="txtSF av0" value="0/0" type="text" />
+          <input class="txtGloss av0" value="" type="text" />
+          <span class="spanInfo av0">
+            <input type="text" class="statusExtra av0" />
+          </span>
+          <input type="text" id="URLText" class="txtSiGMLURL av0" value="" />
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="info-bar">
+    <div class="sign-label" id="signLabel"></div>
+    <div class="sign-desc" id="signDesc"></div>
+    <div class="av-controls">
+      <label style="font-size:12px;color:#6b7280;">Avatar:</label>
+      <select id="avSelect" onchange="changeAvatar(this.value)">
+        <option value="marc">Marc</option>
+        <option value="anna">Anna</option>
+        <option value="luna">Luna</option>
+        <option value="francoise">Francoise</option>
+        <option value="siggi">Siggi</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var signLabel = document.getElementById('signLabel');
+  var signDesc = document.getElementById('signDesc');
+  var idleMsg = document.getElementById('idle-msg');
+  var loadingOverlay = document.getElementById('loading-overlay');
+
+  // Wait for CWA library to set tuavatarLoaded = true
+  var checkLoaded = setInterval(function() {
+    if (tuavatarLoaded) {
+      clearInterval(checkLoaded);
+      loadingOverlay.style.display = 'none';
+      idleMsg.style.display = 'block';
+      window.parent.postMessage({ type: 'PLAYER_READY' }, '*');
+    }
+  }, 500);
+
+  // Fallback: hide loading after 15s even if avatar not fully ready
+  setTimeout(function() {
+    loadingOverlay.style.display = 'none';
+    idleMsg.style.display = 'block';
+    window.parent.postMessage({ type: 'PLAYER_READY' }, '*');
+  }, 15000);
+
+  // Build absolute SiGML URL from a relative path
+  function setSiGMLURL(sigmlPath) {
+    var loc = window.location.href;
+    var locDir = loc.substring(0, loc.lastIndexOf('/'));
+    var url = locDir + "/" + sigmlPath;
+    document.getElementById("URLText").value = url;
+    return url;
+  }
+
+  // Play a SiGML file by URL
+  function startPlayer(sigmlPath) {
+    var url = setSiGMLURL(sigmlPath);
+    CWASA.getLogger("myLog", "warn");
+    CWASA.playSiGMLURL(url);
+    CWASA.getLogger("myLog", "warn");
+  }
+
+  // ── Word-sequence playback (same approach as reference repo) ──
+  var wordArray = [];
+  var totalWords = 0;
+  var wordIdx = 0;
+  var playInterval = null;
+
+  function playWordSequence(words) {
+    // Stop any existing playback
+    if (playInterval) { clearInterval(playInterval); playInterval = null; }
+
+    wordArray = words.slice();
+    totalWords = wordArray.length;
+    wordIdx = 0;
+    playerAvailableToPlay = true;
+    idleMsg.style.display = 'none';
+
+    window.parent.postMessage({ type: 'ANIMATION_START' }, '*');
+
+    // Use setInterval — on each tick, check if CWA is done with current sign.
+    // The CWA library sets playerAvailableToPlay = true when animation completes.
+    playInterval = setInterval(function() {
+      if (wordIdx >= totalWords) {
+        // All words played — wait for last sign to finish
+        if (playerAvailableToPlay) {
+          clearInterval(playInterval);
+          playInterval = null;
+          signLabel.textContent = '';
+          signDesc.textContent = 'Complete';
+          window.parent.postMessage({ type: 'SIGN_CHANGE', gloss: '' }, '*');
+          window.parent.postMessage({ type: 'ANIMATION_COMPLETE' }, '*');
+        }
+      } else if (playerAvailableToPlay) {
+        // CWA is ready — play the next word
+        playerAvailableToPlay = false;
+        var word = wordArray[wordIdx];
+        signLabel.textContent = word.toUpperCase();
+        signDesc.textContent = 'Sign ' + (wordIdx + 1) + ' of ' + totalWords;
+        window.parent.postMessage({ type: 'SIGN_CHANGE', gloss: word.toUpperCase() }, '*');
+        startPlayer("SignFiles/" + word + ".sigml");
+        wordIdx++;
+      } else {
+        // CWA is still playing — check for error states
+        var errEl = document.querySelector(".statusExtra.av0");
+        var errText = errEl ? (errEl.value || '') : '';
+        if (errText.indexOf("invalid") !== -1) {
+          // SiGML file was invalid — skip this sign
+          playerAvailableToPlay = true;
+        }
+      }
+    }, 1500);
+  }
+
+  function stopPlayback() {
+    if (playInterval) { clearInterval(playInterval); playInterval = null; }
+    wordArray = [];
+    totalWords = 0;
+    wordIdx = 0;
+    playerAvailableToPlay = true;
+    signLabel.textContent = '';
+    signDesc.textContent = '';
+  }
+
+  // Avatar change via the hidden CWASAAvMenu select
+  window.changeAvatar = function(avName) {
+    try {
+      var menu = document.querySelector('.CWASAAvMenu.av0 select');
+      if (menu) {
+        menu.value = avName;
+        menu.dispatchEvent(new Event('change'));
+      }
+    } catch(e) {}
+  };
+
+  // Listen for messages from parent React app
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data !== 'object') return;
+
+    if (e.data.type === 'PLAY_SIGNS') {
+      var words = e.data.words;
+      if (words && words.length > 0) {
+        playWordSequence(words);
+      }
+    }
+    if (e.data.type === 'STOP') {
+      stopPlayback();
+    }
+  });
+
+  // Set default URL
+  setSiGMLURL("SignFiles/hello.sigml");
+})();
+</script>
+</body>
+</html>

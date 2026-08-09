@@ -1,0 +1,15 @@
+{
+  "description"     : "========  CWASA client configuration data ========",
+
+  "avSettings" : [
+    {
+      "width":            512,
+      "height":           400,
+      "avList":           "avsbsl",
+      "initAv":           "marc",
+      "allowFrameSteps":  true,
+      "allowSiGMLText":   true,
+      "initSiGMLURL":     ""
+    }
+  ]
+}
