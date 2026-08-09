@@ -78,8 +78,3 @@ Returns every token that has a matching `SignFiles/<word>.sigml` file (sorted li
 
 Use **Sign library** below the avatar to browse all ~850 words that have a `.sigml` file and play any sign on its own.
 
-## Credits
-
-- CWA Signing Avatars: https://vh.cmp.uea.ac.uk/index.php/CWA_Signing_Avatars
-- SiGML sign files reference: https://github.com/shoebham/text_to_isl
-- Word reordering logic reference: https://github.com/sahilkhoslaa/AudioToSignLanguageConverter
