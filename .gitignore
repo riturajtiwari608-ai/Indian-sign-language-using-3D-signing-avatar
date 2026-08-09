@@ -2,6 +2,8 @@
 backend/.venv/
 **/__pycache__/
 *.py[cod]
+.env
+frontend/.env.local
 
 # Frontend dependencies
 node_modules/

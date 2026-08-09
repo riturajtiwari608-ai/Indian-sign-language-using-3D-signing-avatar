@@ -107,7 +107,6 @@ export default function AnimationPlayer({
           src="/player.html"
           title="ISL 3D Animation Player"
           className="player-iframe"
-          allow="webgl"
         />
       </div>
 
