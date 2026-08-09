@@ -39,10 +39,11 @@ npm run dev
 
 The dev server starts at `http://localhost:5173`.
 
-For a deployed frontend, configure `VITE_API_URL` with the public URL of the
-backend (for example, `https://your-render-service.onrender.com`). In Vercel,
-add it under **Project Settings → Environment Variables** for the Production
-environment, then redeploy. See `frontend/.env.example` for the format.
+The production frontend is configured to use
+`https://indian-sign-language-using-3d-signing.onrender.com`. To use a
+different backend, set `VITE_API_URL` under **Vercel Project Settings →
+Environment Variables** for the Production environment, then redeploy. See
+`frontend/.env.example` for the format.
 
 ## Deploy the API on Render
 
