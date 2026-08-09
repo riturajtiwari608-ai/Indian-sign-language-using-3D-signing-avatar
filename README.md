@@ -39,6 +39,21 @@ npm run dev
 
 The dev server starts at `http://localhost:5173`.
 
+## Deploy the API on Render
+
+This repository includes `render.yaml` for the FastAPI backend. When creating a
+Render web service, use the **Python** runtime and either deploy it as a
+Blueprint or set the following values in the service settings:
+
+| Setting | Value |
+|---|---|
+| Root Directory | `backend` |
+| Build Command | `pip install -r requirements.txt && python -m spacy download en_core_web_sm` |
+| Start Command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+| Health Check Path | `/health` |
+
+Do not use `uvicorn app.main:app`: there is no `app` package in this project.
+
 ## API
 
 ### POST /translate
@@ -77,4 +92,3 @@ Returns every token that has a matching `SignFiles/<word>.sigml` file (sorted li
 | She is going to school | her, go, class |
 
 Use **Sign library** below the avatar to browse all ~850 words that have a `.sigml` file and play any sign on its own.
-
